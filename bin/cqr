@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+
+require 'cqr'
+require 'optparse'
+require 'pathname'
+
+basename = Pathname.new(__FILE__).basename
+
+options = { margin: 4, invert: true }
+
+opt_parser = OptionParser.new do |opts|
+  opts.banner = "Usage: #{basename} [options] TEXT"
+
+  opts.on("-s SECRET", "--secret=SECRET", String, "[required] OTP secret") do |secret|
+    options[:secret] = secret
+  end
+
+  opts.on("-m MARGIN", "--margin=MARGIN", Integer, "margin size in characters (default 4)") do |margin|
+    options[:margin] = margin
+  end
+
+  opts.on("-i", "--no-invert", "don't invert colors (for black on white terminals)") do |invert|
+    options[:invert] = invert
+  end
+
+  opts.on("-h", "--help", "display this message") do
+    puts opt_parser
+    exit
+  end
+end
+
+opt_parser.parse!
+
+if ARGV.size > 1
+  puts opt_parser
+  exit 1
+end
+
+text = ARGV.pop
+
+if !text || text.empty?
+  puts opt_parser
+  exit 1
+end
+
+instance = CQR::QRFormatter.new(text)
+instance.margin = options[:margin]
+instance.invert = options[:invert]
+
+puts instance.to_s
+
+
+
+

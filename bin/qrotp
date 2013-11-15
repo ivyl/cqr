@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+
+require 'cqr/otp'
+require 'optparse'
+require 'base32'
+
+options = { margin: 4, invert: true }
+
+opt_parser = OptionParser.new do |opts|
+  opts.on("-n NAME", "--name=NAME", String, "[required] display name") do |name|
+    options[:name] = name
+  end
+
+  opts.on("-s SECRET", "--secret=SECRET", String, "[required] OTP secret") do |secret|
+    options[:secret] = secret
+  end
+
+  opts.on("-m MARGIN", "--margin=MARGIN", Integer, "margin size in characters (default 4)") do |margin|
+    p margin
+    options[:margin] = margin
+  end
+
+  opts.on("-b", "--[no-]base32", "secret is base32 encoded (default is hexadecimal)") do |base|
+    options[:base32] = base
+  end
+
+  opts.on("-i", "--no-invert", "don't invert colors (for black on white terminals)") do |invert|
+    options[:invert] = invert
+  end
+
+  opts.on("-h", "--help", "display this message") do
+    puts opt_parser
+    exit
+  end
+end
+
+opt_parser.parse!
+
+if !options.has_key?(:secret) || !options.has_key?(:name)
+  puts opt_parser
+  exit -1
+end
+
+
+if !options[:base32]
+  binary = [options[:secret]].pack("H*")
+  options[:secret] = Base32.encode(binary)
+end
+
+
+
+instance = CQR::OTP::Builder.new(options[:secret], options[:name]).to_qr
+instance.margin = options[:margin]
+instance.invert = options[:invert]
+
+puts instance.to_s
+
+
