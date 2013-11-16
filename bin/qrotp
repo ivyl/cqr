@@ -3,6 +3,7 @@
 require 'cqr/otp'
 require 'optparse'
 require 'base32'
+require 'io/console'
 
 options = { margin: 4, invert: true }
 
@@ -28,18 +29,47 @@ opt_parser = OptionParser.new do |opts|
     options[:invert] = invert
   end
 
+  opts.on("-e", "--echo", "don't hide stdin") do |echo|
+    options[:echo] = echo
+  end
+
   opts.on("-h", "--help", "display this message") do
     puts opt_parser
     exit
   end
+
+  opts.separator ""
+  opts.separator "for stdin input pass \"-\" as NAME/SECRET"
 end
 
 opt_parser.parse!
+
 
 if !options.has_key?(:secret) || !options.has_key?(:name)
   puts opt_parser
   exit -1
 end
+
+if options[:secret] == "-"
+  print "Enter secret: "
+  if options[:echo]
+    options[:secret] = STDIN.gets.chomp
+  else
+    options[:secret] = STDIN.noecho(&:gets).chomp
+    puts
+  end
+end
+
+if options[:name] == "-"
+  print "Enter name: "
+  if options[:echo]
+    options[:name] = STDIN.gets.chomp
+  else
+    options[:name] = STDIN.noecho(&:gets).chomp
+    puts
+  end
+end
+
 
 
 if !options[:base32]

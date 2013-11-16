@@ -3,6 +3,7 @@
 require 'cqr'
 require 'optparse'
 require 'pathname'
+require 'io/console'
 
 basename = Pathname.new(__FILE__).basename
 
@@ -10,10 +11,6 @@ options = { margin: 4, invert: true }
 
 opt_parser = OptionParser.new do |opts|
   opts.banner = "Usage: #{basename} [options] TEXT"
-
-  opts.on("-s SECRET", "--secret=SECRET", String, "[required] OTP secret") do |secret|
-    options[:secret] = secret
-  end
 
   opts.on("-m MARGIN", "--margin=MARGIN", Integer, "margin size in characters (default 4)") do |margin|
     options[:margin] = margin
@@ -27,6 +24,9 @@ opt_parser = OptionParser.new do |opts|
     puts opt_parser
     exit
   end
+
+  opts.separator ""
+  opts.separator "for stdin input pass \"-\" as TEXT"
 end
 
 opt_parser.parse!
@@ -37,6 +37,12 @@ if ARGV.size > 1
 end
 
 text = ARGV.pop
+
+if text == "-"
+  text = STDIN.read
+end
+
+puts text
 
 if !text || text.empty?
   puts opt_parser
