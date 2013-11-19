@@ -5,11 +5,11 @@ require 'optparse'
 require 'base32'
 require 'io/console'
 
-options = { margin: 4, invert: true }
+options = { margin: 4, invert: true, type: 'totp' }
 
 opt_parser = OptionParser.new do |opts|
-  opts.on("-n NAME", "--name=NAME", String, "[required] display name") do |name|
-    options[:name] = name
+  opts.on("-l LABEL", "--label=LABEL", String, "[required] displayed label") do |label|
+    options[:label] = label
   end
 
   opts.on("-s SECRET", "--secret=SECRET", String, "[required] OTP secret") do |secret|
@@ -33,6 +33,22 @@ opt_parser = OptionParser.new do |opts|
     options[:echo] = echo
   end
 
+  opts.on("--issuer=ISSUER", String, "issuer of the secret") do |issuer|
+    options[:issuer] = issuer
+  end
+
+  opts.on("-d DIGITS", "--digits=DIGITS", Integer, "hotp/totp, default to totp") do |digits|
+    options[:digits] = digits
+  end
+
+  opts.on("-c COUNTER", "--counter=COUNTER", Integer, "counter state, required with hotp") do |counter|
+    options[:counter] = counter
+  end
+
+  opts.on("-t TYPE", "--type=TYPE", String, "hotp/totp, default to totp") do |type|
+    options[:type] = type
+  end
+
   opts.on("-h", "--help", "display this message") do
     puts opt_parser
     exit
@@ -45,7 +61,12 @@ end
 opt_parser.parse!
 
 
-if !options.has_key?(:secret) || !options.has_key?(:name)
+if !options.has_key?(:secret) || !options.has_key?(:label)
+  puts opt_parser
+  exit -1
+end
+
+if options.has_key?(:type) && options[:type] == "hotp" && !options.has_key?(:counter)
   puts opt_parser
   exit -1
 end
@@ -60,12 +81,12 @@ if options[:secret] == "-"
   end
 end
 
-if options[:name] == "-"
-  print "Enter name: "
+if options[:label] == "-"
+  print "Enter label: "
   if options[:echo]
-    options[:name] = STDIN.gets.chomp
+    options[:label] = STDIN.gets.chomp
   else
-    options[:name] = STDIN.noecho(&:gets).chomp
+    options[:label] = STDIN.noecho(&:gets).chomp
     puts
   end
 end
@@ -79,10 +100,17 @@ end
 
 
 
-instance = CQR::OTP::Builder.new(options[:secret], options[:name]).to_qr
-instance.margin = options[:margin]
-instance.invert = options[:invert]
+instance = CQR::OTP::Builder.new()
+instance.secret  = options[:secret]
+instance.issuer  = options[:issuer]
+instance.type    = options[:type]
+instance.digits  = options[:digits]
+instance.counter = options[:counter]
+instance.period  = options[:period]
+instance.label   = options[:label]
 
-puts instance.to_s
+qr_code = instance.to_qr
+qr_code.margin  = options[:margin]
+qr_code.invert  = options[:invert]
 
-
+puts qr_code.to_s

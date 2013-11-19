@@ -42,8 +42,6 @@ if text == "-"
   text = STDIN.read
 end
 
-puts text
-
 if !text || text.empty?
   puts opt_parser
   exit 1
