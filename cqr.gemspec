@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.homepage      = "https://github.com/ivyl/cqr"
   s.summary       = "Command-line QR Code tool."
   s.description   = "CQR is command-line tool for creating and displaying QR Codes."
-  s.license       = "MIT"
+  s.licenses      = [ "MIT", "GPL-2" ]
 
   s.required_rubygems_version = ">= 1.3.6"
 
